@@ -22,7 +22,10 @@
     </style>
 </head>
 <body>
-    <div align="right" id="links"></div>
+    <div align="right">
+        <button id="c_button" class="btn btn-default btn-xs" onClick="$('#change_project').modal()">Change Project</button>
+        <span id="links"></span>
+    </div>
     <table width="100%">
         <thead>
             <tr>
@@ -99,10 +102,32 @@
         </div>
       </div>
     </div>
+    <!--Project Change Modal-->
+    <div class="modal fade" id="change_project" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="errorModalLabel">Change Project</h4>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+                <select class="form-control" id="c_project">
+                    <option value="mpro">mpro</option>
+                    <option value="cpro">cpro</option>
+                    <option value="sbsgui">sbsgui</option>
+                <select >
+            </div>
+            <button onclick="change_project()" class="btn btn-default">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <script>
     var auth, header = {}, project, url;
     $(document).ready(function() {
         $("table").hide();
+        $("#c_button").hide();
         $('#login').modal();
     });
     function login(){
@@ -119,6 +144,12 @@
         $('#otp_modal').modal('hide');
         header["X-GitHub-OTP"] = $("#otp").val();
         get_issues(url);
+    }
+    function change_project(){
+        $('#change_project').modal('hide');
+        project = $("#c_project").val();
+        url = "https://api.github.com/repos/k2informaticsgmbh/"+project+"/issues?filter=all&state=all";
+        get_issues(url);   
     }
     function get_issues(url) {
         $.ajax({
@@ -160,6 +191,7 @@
     function show_issues(issues) {
         $('#issues').empty();
         $("table").show();
+        $("#c_button").show();
         for(var id = 0; id < issues.length; ++id) {
             var fontWeight = "normal";
             if(issues[id].state == "open"){
