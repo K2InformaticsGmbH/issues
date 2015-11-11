@@ -1,8 +1,6 @@
 <html>
 <head>
-    <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.4/themes/black-tie/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <title>SBS Web Gui Issues</title>
@@ -102,7 +100,7 @@
       </div>
     </div>
     <script>
-    var auth, header = {}, project;
+    var auth, header = {}, project, url;
     $(document).ready(function() {
         $("table").hide();
         $('#login').modal();
@@ -114,18 +112,19 @@
         project = $("#project").val();
         auth = btoa(user + ":" + pass);
         header = { "Authorization" : "Basic " + auth },
-        get_issues();
+        url = "https://api.github.com/repos/k2informaticsgmbh/"+project+"/issues?filter=all&state=all";
+        get_issues(url);
     };
     function otp() {
         $('#otp_modal').modal('hide');
         header["X-GitHub-OTP"] = $("#otp").val();
-        get_issues();
+        get_issues(url);
     }
-    function get_issues() {
+    function get_issues(url) {
         $.ajax({
             type : 'GET',
             headers: header,
-            url: "https://api.github.com/repos/k2informaticsgmbh/"+project+"/issues?filter=all&state=all",
+            url: url,
             success: function(issues, textStatus, request) {
                 setTimeout(create_links, 0, request.getResponseHeader('link'));
                 setTimeout(show_issues, 0, issues);
@@ -162,14 +161,18 @@
         $('#issues').empty();
         $("table").show();
         for(var id = 0; id < issues.length; ++id) {
+            var fontWeight = "normal";
+            if(issues[id].state == "open"){
+                fontWeight = "bold";
+            }
             $('#issues').append(
                 $('<tr>').append(
-                    $('<td>').html(issues[id].number),
-                    $('<td>').html(issues[id].title),
-                    $('<td>').html(issues[id].user.login),
-                    $('<td>').html(issues[id].assignee != null ? issues[id].assignee.login : ''),
-                    $('<td>').html(issues[id].milestone != null ? issues[id].milestone.title : ''),
-                    $('<td>').html(issues[id].state)
+                    $('<td>').html(issues[id].number).css("font-weight", fontWeight),
+                    $('<td>').html(issues[id].title).css("font-weight", fontWeight),
+                    $('<td>').html(issues[id].user.login).css("font-weight", fontWeight),
+                    $('<td>').html(issues[id].assignee != null ? issues[id].assignee.login : '').css("font-weight", fontWeight),
+                    $('<td>').html(issues[id].milestone != null ? issues[id].milestone.title : '').css("font-weight", fontWeight),
+                    $('<td>').html(issues[id].state).css("font-weight", fontWeight)
                 )
             );
         }
