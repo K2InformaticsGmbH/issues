@@ -1,0 +1,179 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.4/themes/black-tie/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <title>SBS Web Gui Issues</title>
+    <style>
+    table, th, td {
+        border: border;
+        border-collapse: collapse;
+        padding-left: 10px;
+        font-family: "Courier New";
+        font-size: small;
+    }
+    th {
+        text-align: left;
+        background-color:black;
+        color:white;
+    }
+    tr:nth-child(even) {background: #CCC}
+    tr:nth-child(odd) {background: #FFF}
+    </style>
+</head>
+<body>
+    <div align="right" id="links"></div>
+    <table width="100%">
+        <thead>
+            <tr>
+                <th>Number</th>
+                <th>Title</th>
+                <th>Opened</th>
+                <th>Assigned</th>
+                <th>Milestone</th>
+                <th>State</th>
+            </tr>
+        </thead>
+        <tbody id="issues">
+        </tbody>
+    </table>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="login" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Login</h4>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+                <input type="text" class="form-control" id="user" name="user" placeholder="Github Username">
+              </div>
+              <div class="form-group">
+                <input type="password" class="form-control" id="pass" name="pass"  placeholder="Password">
+              </div>
+              <div class="form-group">
+                <select class="form-control" id="project">
+                    <option value="mpro">mpro</option>
+                    <option value="cpro">cpro</option>
+                    <option value="sbsgui">sbsgui</option>
+                <select >
+                </select> 
+              </div>
+              <button onclick="login()" class="btn btn-default">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--OTP Modal -->
+    <div class="modal fade" id="otp_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Two Factor Authentication</h4>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+                <input type="text" class="form-control" id="otp" name="otp" placeholder="OTP">
+            </div>
+            <button onclick="otp()" class="btn btn-default">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--Failed Login -->
+    <div class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="errorModalLabel">Unauthorized</h4>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+                <label id="errorInfo">Acces Denied</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+    var auth, header = {}, project;
+    $(document).ready(function() {
+        $("table").hide();
+        $('#login').modal();
+    });
+    function login(){
+        $('#login').modal('hide');
+        var user = $("#user").val();
+        var pass = $("#pass").val();
+        project = $("#project").val();
+        auth = btoa(user + ":" + pass);
+        header = { "Authorization" : "Basic " + auth },
+        get_issues();
+    };
+    function otp() {
+        $('#otp_modal').modal('hide');
+        header["X-GitHub-OTP"] = $("#otp").val();
+        get_issues();
+    }
+    function get_issues() {
+        $.ajax({
+            type : 'GET',
+            headers: header,
+            url: "https://api.github.com/repos/k2informaticsgmbh/"+project+"/issues?filter=all&state=all",
+            success: function(issues, textStatus, request) {
+                setTimeout(create_links, 0, request.getResponseHeader('link'));
+                setTimeout(show_issues, 0, issues);
+            },
+            error: function(jqXHR, errorStatus, errorThrown) {
+                if(jqXHR.status ==  401 && jqXHR.responseJSON.message.includes("OTP")) {
+                    if(jqXHR.getResponseHeader("X-GitHub-OTP") == "required; sms") {
+                        $("#errorInfo").text("Does not support SMS token for now Please use application based authentication");
+                        $("#error").modal();
+                    } else {              
+                        $('#otp_modal').modal();
+                    }
+                } else {
+                    console.log("Get issues failed : "+errorStatus+" "+errorThrown);
+                    $("#error").modal();
+                }
+            }
+        });
+    };
+    function create_links(link) {
+        var links = link.split(',');
+        $('#links').empty();
+        for(var i = 0; i < links.length; ++i) {
+            var parts = links[i].match(/\<(.*)\>.*rel="(.*)"/);
+            $('#links').append(
+                    $('<a href="#">')
+                        .click(function() { get_issues(parts[1]); })
+                        .text(parts[2])
+                        .css('padding-left', 10)
+            );
+        }
+    };
+    function show_issues(issues) {
+        $('#issues').empty();
+        $("table").show();
+        for(var id = 0; id < issues.length; ++id) {
+            $('#issues').append(
+                $('<tr>').append(
+                    $('<td>').html(issues[id].number),
+                    $('<td>').html(issues[id].title),
+                    $('<td>').html(issues[id].user.login),
+                    $('<td>').html(issues[id].assignee != null ? issues[id].assignee.login : ''),
+                    $('<td>').html(issues[id].milestone != null ? issues[id].milestone.title : ''),
+                    $('<td>').html(issues[id].state)
+                )
+            );
+        }
+    };
+    </script>
+</body>
+</html>
