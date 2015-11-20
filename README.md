@@ -1,2 +1,2 @@
 # Issues
-Issue Reporter
+[Issue Reporter](http://k2informaticsgmbh.github.io/issues/)
