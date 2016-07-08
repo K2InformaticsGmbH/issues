@@ -151,7 +151,7 @@
         for(var i = 0; i < links.length; ++i) {
             var parts = links[i].match(/\<(.*)\>.*rel="(.*)"/);
             $('#links').append(
-                    $('<a href="#" target="_blank">')
+                    $('<a href="#">')
                         .click(function() { get_issues(parts[1]); })
                         .text(parts[2])
                         .css('padding-left', 10)
