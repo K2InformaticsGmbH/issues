@@ -237,7 +237,7 @@
             }
             $('#issues').append(
                 $('<tr>').append(
-                    $('<td>').html("<a href='"+ issues[id].html_url +"'>" + issues[id].number + "</a>"),
+                    $('<td>').html("<a href='"+ issues[id].html_url +"' target='_blank'>" + issues[id].number + "</a>"),
                     $('<td>').html(issues[id].title).css("font-weight", fontWeight),
                     $('<td>').html(issues[id].user.login).css("font-weight", fontWeight),
                     $('<td>').html(issues[id].assignee != null ? issues[id].assignee.login : '').css("font-weight", fontWeight),
