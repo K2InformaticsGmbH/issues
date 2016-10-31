@@ -1,6 +1,6 @@
 <html>
 <head>
-    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <title>Issues</title>
@@ -159,7 +159,7 @@
       </div>
     </div>
     <script>
-    var auth, header = {}, project, url;
+    var auth, header = {"Accept" : "application/vnd.github.v3+json"}, project, url;
     $(document).ready(function() {
         $("table").hide();
         $("#c_button").hide();
@@ -171,7 +171,7 @@
         var pass = $("#pass").val();
         project = $("#project").val();
         auth = btoa(user + ":" + pass);
-        header = { "Authorization" : "Basic " + auth },
+        header["Authorization"] = "Basic " + auth;
         url = "https://api.github.com/repos/k2informaticsgmbh/"+project+"/issues?filter=all&state=all";
         get_issues(url);
     };
@@ -217,7 +217,9 @@
             var parts = links[i].match(/\<(.*)\>.*rel="(.*)"/);
             $('#links').append(
                     $('<a href="#">')
-                        .click(function() { get_issues(parts[1]); })
+                        .on('click', {url : parts[1]}, function(event) { 
+                            get_issues(event.data.url); 
+                        })
                         .text(parts[2])
                         .css('padding-left', 10)
             );
